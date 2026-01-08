@@ -1,0 +1,255 @@
+---
+title: "Examples"
+description: "End-to-end workflow examples"
+icon: "book-open"
+---
+
+Real workflows showing triggers, enrichment, qualification, and routing.
+
+---
+
+## Inbound Qualification
+
+**Trigger:** Calendly booking → **Enrich** → **Qualify** → **Route**
+
+When someone books a demo, automatically research them and route based on fit.
+
+```typescript
+// input: Calendly webhook data (name, email, company)
+const booking = input[0];
+
+// Step 1: Enrich the person
+const contacts = await canvas.contacts.enrich({
+  people: [{ email: booking.email, name: booking.name }],
+});
+const contact = contacts[0];
+
+// Step 2: Research their company
+const companyInfo = await canvas.ai.research({
+  prompt: "What does this company do? What's their size and industry?",
+  data: { company: booking.company, email: booking.email },
+});
+
+// Step 3: Score and qualify
+let score = 0;
+if (contact.title?.match(/CEO|Founder|VP|Director|Head/i)) score += 30;
+if (companyInfo.includes("SaaS") || companyInfo.includes("B2B")) score += 20;
+if (contact.company_size > 50) score += 20;
+
+const qualified = score >= 40;
+
+// Step 4: Return with qualification
+return [{
+  ...contact,
+  company_research: companyInfo,
+  score,
+  qualified,
+  routing: qualified ? "ae-calendar" : "nurture-sequence",
+}];
+```
+
+**Next steps:** Route to AE calendar if qualified, nurture sequence if not.
+
+---
+
+## Outbound Prospecting
+
+**Trigger:** Manual or scheduled → **Find companies** → **Find people** → **Enrich** → **Personalize**
+
+Build a list of qualified prospects with personalized outreach.
+
+```typescript
+// Step 1: Find target companies
+const companies = await canvas.companies.find({
+  industries: ["SaaS", "Fintech"],
+  employeeCountMin: 50,
+  employeeCountMax: 500,
+  countries: ["United States"],
+  limit: 50,
+});
+
+// Step 2: Find decision makers
+const people = await canvas.people.search({
+  companies,
+  titles: ["CTO", "VP Engineering", "Head of Engineering"],
+  maxPerCompany: 2,
+});
+
+// Step 3: Get contact info
+const contacts = await canvas.contacts.enrich({ people });
+
+// Step 4: Personalize each contact
+for (const contact of contacts) {
+  contact.ice_breaker = await canvas.ai.research({
+    prompt: "Write a 1-sentence personalized opener referencing their company or role.",
+    data: contact,
+  });
+}
+
+return contacts;
+```
+
+---
+
+## Event Follow-up
+
+**Trigger:** CSV upload (event attendees) → **Enrich** → **Score** → **Segment**
+
+Process event attendees and prioritize for follow-up.
+
+```typescript
+// input: CSV of event attendees (name, email, company)
+const attendees = input;
+
+// Enrich all attendees
+const enriched = await canvas.contacts.enrich({
+  people: attendees.map(a => ({ email: a.email, name: a.name })),
+});
+
+// Score and segment
+for (const contact of enriched) {
+  let score = 0;
+  
+  // Title scoring
+  if (contact.title?.match(/C-Level|VP|Director/i)) score += 40;
+  else if (contact.title?.match(/Manager|Lead/i)) score += 20;
+  
+  // Company size scoring
+  if (contact.company_size > 200) score += 30;
+  else if (contact.company_size > 50) score += 15;
+  
+  contact.score = score;
+  contact.segment = score >= 50 ? "hot" : score >= 25 ? "warm" : "nurture";
+}
+
+// Sort by score
+enriched.sort((a, b) => b.score - a.score);
+
+canvas.log(`Hot: ${enriched.filter(c => c.segment === "hot").length}`);
+canvas.log(`Warm: ${enriched.filter(c => c.segment === "warm").length}`);
+
+return enriched;
+```
+
+---
+
+## Account-Based Research
+
+**Trigger:** Target account list → **Research each** → **Generate briefs**
+
+Deep research on a list of target accounts.
+
+```typescript
+// input: list of target companies
+for (const company of input) {
+  // Company overview
+  company.overview = await canvas.ai.research({
+    prompt: "2-sentence description: what they do and who they sell to.",
+    data: company,
+  });
+  
+  // Recent news
+  company.news = await canvas.ai.research({
+    prompt: "Top 3 news items from the last 6 months. Include dates.",
+    data: company,
+    model: "sonar-deep-research",
+  });
+  
+  // Potential pain points
+  company.pain_points = await canvas.ai.research({
+    prompt: "Based on their industry and size, what challenges do they likely face?",
+    data: company,
+  });
+  
+  canvas.log(`Researched: ${company.name}`);
+}
+
+return input;
+```
+
+---
+
+## LinkedIn Engagement Tracking
+
+**Trigger:** LinkedIn post URL → **Get reactions** → **Enrich engagers** → **Qualify**
+
+Find and qualify people who engaged with a competitor's post.
+
+```typescript
+// input: LinkedIn post URLs to monitor
+const postUrls = input.map(i => i.url);
+
+// Get people who reacted
+const reactions = await canvas.linkedin.reactions({
+  urls: postUrls,
+  maxPerPost: 100,
+});
+
+// Filter to relevant titles
+const relevantPeople = reactions.filter(person =>
+  person.title?.match(/CEO|CTO|VP|Director|Head|Manager/i)
+);
+
+// Enrich with contact info
+const contacts = await canvas.contacts.enrich({
+  people: relevantPeople,
+});
+
+// Add engagement context
+for (const contact of contacts) {
+  contact.source = "linkedin-engagement";
+  contact.engaged_with = contact.post_url;
+}
+
+canvas.log(`Found ${contacts.length} engaged decision makers`);
+
+return contacts;
+```
+
+---
+
+## Data Cleanup & Validation
+
+**Trigger:** CRM export → **Validate emails** → **Enrich missing data** → **Clean**
+
+Clean and validate a list before outreach.
+
+```typescript
+// input: CRM export with potentially stale data
+const records = input;
+
+// Validate emails
+const emails = records.map(r => r.email).filter(Boolean);
+const validation = await canvas.contacts.email.validate({ emails });
+const validEmails = new Set(validation.filter(v => v.valid).map(v => v.value));
+
+// Process each record
+const cleaned = [];
+for (const record of records) {
+  // Skip invalid emails
+  if (!validEmails.has(record.email)) {
+    canvas.log(`Invalid: ${record.email}`);
+    continue;
+  }
+  
+  // Enrich missing company data
+  if (!record.company_size || !record.industry) {
+    const info = await canvas.ai.research({
+      prompt: "Return JSON: { employee_count: number, industry: string }",
+      data: { company: record.company, website: record.website },
+    });
+    try {
+      const parsed = JSON.parse(info);
+      record.company_size = record.company_size || parsed.employee_count;
+      record.industry = record.industry || parsed.industry;
+    } catch (e) {}
+  }
+  
+  cleaned.push(record);
+}
+
+canvas.log(`${cleaned.length} of ${records.length} records valid`);
+
+return cleaned;
+```
+

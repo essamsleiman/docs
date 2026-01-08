@@ -1,0 +1,140 @@
+---
+title: "Canvas SDK"
+description: "A unified, typed SDK for code-first workflow automation"
+icon: "code"
+---
+
+The Canvas SDK provides a clean, typed interface for building data enrichment workflows. Instead of managing multiple providers and APIs, you write simple code that just works. Our SDK supports:
+
+- **B2B company discovery:** Find companies by industry, size, tech stack
+- **Local business search:** Restaurants, stores, services via Google Maps
+- **People search:** Decision makers by title, department, seniority
+- **Contact enrichment:** Verified emails and phone numbers via waterfall across top data sources
+- **LinkedIn & Instagram:** Scrape profiles, posts, and engagement data
+- **AI research:** Summarize, analyze, and generate with multiple models
+
+All powered by best-in-class data providers (Apollo, People Data Labs, Google Maps, Perplexity, and more) unified behind one typed API. 
+
+## Design Philosophy
+
+<CardGroup cols={2}>
+<Card title="Task-Oriented" icon="list-check">
+  Methods organized by what you want to accomplish: find people, enrich contacts, research companies.
+</Card>
+
+<Card title="Single Params Object" icon="brackets-curly">
+  Every method takes one typed params object. No positional arguments to remember.
+</Card>
+
+<Card title="Smart Defaults" icon="wand-magic-sparkless">
+  SDK picks the best provider automatically. Override with `_provider` when needed.
+</Card>
+
+<Card title="Type Safety" icon="shield-check">
+  Full TypeScript support with autocomplete and compile-time error checking.
+</Card>
+</CardGroup>
+
+## Explore the SDK
+
+<Card title="People & Contacts" icon="users" href="/sdk/find-people">
+
+Find decision makers at companies, then get their verified emails and phone numbers.
+
+```typescript
+const people = await canvas.people.search({
+  companies,
+  titles: ["CTO", "VP Engineering"],
+});
+
+const contacts = await canvas.contacts.enrich({ people });
+```
+
+</Card>
+
+<Card title="Companies" icon="building" href="/sdk/find-companies">
+
+Discover B2B companies by industry, size, and tech stack.
+
+```typescript
+const companies = await canvas.companies.find({
+  industries: ["Fintech"],
+  employeeCountMin: 50,
+  employeeCountMax: 500,
+});
+```
+
+</Card>
+
+<Card title="Places" icon="location-dot" href="/sdk/find-places">
+
+Find local businesses via Google Maps — restaurants, retail stores, service providers.
+
+```typescript
+const restaurants = await canvas.places.find({
+  query: "Italian restaurants",
+  location: "Austin, TX",
+  minRating: 4.0,
+});
+```
+
+</Card>
+
+<Card title="Social" icon="linkedin" href="/sdk/linkedin">
+
+Scrape LinkedIn profiles, get recent posts, find engaged prospects from reactions.
+
+```typescript
+const profiles = await canvas.linkedin.profiles({
+  urls: ["linkedin.com/in/johndoe"],
+});
+
+const posts = await canvas.linkedin.posts({
+  urls: ["linkedin.com/in/johndoe"],
+  maxPosts: 10,
+});
+```
+
+</Card>
+
+<Card title="Enrichment" icon="brain" href="/sdk/ai-research">
+
+Enrich records with AI-generated summaries, categorization, and research.
+
+```typescript
+const summary = await canvas.ai.research({
+  prompt: "Summarize this company in one sentence",
+  data: company,
+});
+```
+
+</Card>
+
+## Data Flow
+
+Every code block receives `input` (data from the previous step) and must `return` an array (data for the next step).
+
+```typescript
+// input: Array of companies from previous step
+// Add AI-generated summaries to each company
+for (const company of input) {
+  company.summary = await canvas.ai.research({
+    prompt: "Summarize this company in one sentence",
+    data: company,
+  });
+}
+
+return input; // Pass enriched data to next step
+```
+
+<Card title="Learn more about Context" icon="arrows-rotate" href="/sdk/context">
+  Understand input, output, and how data flows through workflows.
+</Card>
+
+## Utilities
+
+| Method | Description |
+|--------|-------------|
+| `canvas.log(...args)` | Log output (captured in execution results) |
+| `canvas.delay(ms)` | Wait for specified milliseconds (max 10 seconds) |
+

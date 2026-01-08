@@ -1,0 +1,213 @@
+---
+title: "Find Places"
+description: "Discover local businesses using Google Maps"
+icon: "location-dot"
+---
+
+Discover local businesses like restaurants, retail stores, service providers, and other physical locations using Google Maps data.
+
+<Note>
+  Looking for B2B companies (SaaS, tech, agencies)? Use [`canvas.companies.find()`](/sdk/find-companies) instead.
+</Note>
+
+```typescript
+const restaurants = await canvas.places.find({
+  query: "Italian restaurants",
+  location: "Austin, TX",
+  radius: 5000,
+  minRating: 4.0,
+  limit: 50,
+});
+```
+
+---
+
+## Parameters
+
+### What are you looking for?
+
+<ParamField body="query" type="string" required>
+  Search query (e.g., `"coffee shops"`, `"dentists"`, `"yoga studios"`).
+</ParamField>
+
+<ParamField body="keywords" type="string[]">
+  Additional keywords to filter results.
+</ParamField>
+
+### Where?
+
+<ParamField body="location" type="string" required>
+  Location to search around (e.g., `"Austin, TX"`, `"90210"`).
+</ParamField>
+
+<ParamField body="radius" type="number" default="5000">
+  Search radius in meters (max 50,000).
+</ParamField>
+
+<ParamField body="coordinates" type="object">
+  Exact coordinates to search around.
+  ```typescript
+  { lat: 30.2672, lng: -97.7431 }
+  ```
+</ParamField>
+
+### Filters
+
+<ParamField body="minRating" type="number">
+  Minimum Google rating (1-5).
+</ParamField>
+
+<ParamField body="minReviews" type="number">
+  Minimum number of reviews.
+</ParamField>
+
+<ParamField body="hasWebsite" type="boolean" default="true">
+  Only return places with a website.
+</ParamField>
+
+<ParamField body="openNow" type="boolean">
+  Only return places currently open.
+</ParamField>
+
+### How many?
+
+<ParamField body="limit" type="number" default="20">
+  Maximum number of places to return.
+</ParamField>
+
+---
+
+## Returns
+
+Array of places matching the criteria:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Business name |
+| `address` | string | Full address |
+| `phone` | string | Phone number |
+| `website` | string | Website URL |
+| `rating` | number | Google rating (1-5) |
+| `reviewCount` | number | Number of reviews |
+| `placeId` | string | Google Place ID |
+| `types` | string[] | Business types |
+| `hours` | object | Operating hours |
+| `priceLevel` | number | Price level (1-4) |
+
+---
+
+## Examples
+
+### Find Restaurants
+
+```typescript
+const restaurants = await canvas.places.find({
+  query: "sushi restaurants",
+  location: "San Francisco, CA",
+  minRating: 4.0,
+  limit: 25,
+});
+```
+
+### Find Service Providers
+
+```typescript
+const dentists = await canvas.places.find({
+  query: "dentist",
+  location: "Brooklyn, NY",
+  minRating: 4.5,
+  minReviews: 50,
+  limit: 20,
+});
+```
+
+### Find by Coordinates
+
+```typescript
+const nearbyGyms = await canvas.places.find({
+  query: "gym fitness center",
+  coordinates: { lat: 40.7128, lng: -74.0060 },
+  radius: 2000,
+  limit: 10,
+});
+```
+
+### Find Open Businesses
+
+```typescript
+const openCoffeeShops = await canvas.places.find({
+  query: "coffee shop",
+  location: "Seattle, WA",
+  openNow: true,
+  minRating: 4.0,
+  limit: 15,
+});
+```
+
+---
+
+## Use Cases
+
+### Local Lead Generation
+
+Find businesses in a specific area that might need your services:
+
+```typescript
+const leads = await canvas.places.find({
+  query: "auto repair shop",
+  location: "Denver, CO",
+  minRating: 3.5,
+  hasWebsite: true,
+  limit: 100,
+});
+
+// Enrich with contact info
+const enriched = await canvas.contacts.enrich({
+  people: leads.map(place => ({
+    company: place.name,
+    domain: new URL(place.website).hostname,
+  })),
+});
+```
+
+### Competitive Analysis
+
+Map out competitors in a region:
+
+```typescript
+const competitors = await canvas.places.find({
+  query: "yoga studio pilates",
+  location: "Austin, TX",
+  radius: 15000,
+  limit: 50,
+});
+
+// Research each competitor
+for (const competitor of competitors) {
+  const analysis = await canvas.ai.research({
+    prompt: "Summarize this business's offerings and reviews",
+    data: competitor,
+  });
+}
+```
+
+### Territory Mapping
+
+Find all businesses of a type across multiple locations:
+
+```typescript
+const cities = ["Austin, TX", "Dallas, TX", "Houston, TX", "San Antonio, TX"];
+
+const allPlaces = [];
+for (const city of cities) {
+  const places = await canvas.places.find({
+    query: "commercial real estate agency",
+    location: city,
+    limit: 30,
+  });
+  allPlaces.push(...places);
+}
+
+return allPlaces;
+```
+

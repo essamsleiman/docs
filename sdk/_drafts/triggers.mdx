@@ -1,0 +1,143 @@
+---
+title: "Triggers"
+description: "Start workflows from external events"
+icon: "bolt"
+---
+
+Triggers define what starts your workflow. When an event fires, your code runs with the event data in `input`.
+
+## Calendly
+
+Trigger workflows when someone books a meeting.
+
+```typescript
+// input: Calendly booking data
+const booking = input[0];
+
+// Available fields
+const { 
+  name,           // "John Smith"
+  email,          // "john@company.com"
+  company,        // "Acme Inc" (if collected)
+  event_type,     // "Demo Call"
+  scheduled_time, // "2024-01-15T10:00:00Z"
+  answers,        // Custom question responses
+} = booking;
+
+// Enrich and process
+const contacts = await canvas.contacts.enrich({
+  people: [{ email, name }],
+});
+
+return contacts;
+```
+
+### Setup
+
+1. Connect your Calendly account in Canvas settings
+2. Select which event types trigger the workflow
+3. Map custom questions to fields (optional)
+
+---
+
+## Webhooks
+
+Receive data from any external system.
+
+```typescript
+// input: Webhook payload (your external system's data)
+const payload = input[0];
+
+// Process however you need
+const contacts = await canvas.contacts.enrich({
+  people: payload.leads,
+});
+
+return contacts;
+```
+
+### Setup
+
+1. Create a webhook trigger in your workflow
+2. Copy the unique webhook URL
+3. Configure your external system to POST to that URL
+
+### Webhook URL Format
+
+```
+https://app.canvas.com/api/webhooks/{workflow_id}
+```
+
+---
+
+## Scheduled
+
+Run workflows on a recurring schedule.
+
+```typescript
+// input: Empty array (no trigger data)
+// Scheduled workflows generate their own data
+
+const companies = await canvas.companies.find({
+  industries: ["SaaS"],
+  limit: 50,
+});
+
+return companies;
+```
+
+### Schedule Options
+
+| Schedule | Cron | Description |
+|----------|------|-------------|
+| Hourly | `0 * * * *` | Every hour |
+| Daily | `0 9 * * *` | Every day at 9am |
+| Weekly | `0 9 * * 1` | Every Monday at 9am |
+| Monthly | `0 9 1 * *` | First of month at 9am |
+
+---
+
+## File Upload
+
+Trigger with uploaded CSV/Excel data.
+
+```typescript
+// input: Array of rows from uploaded file
+const rows = input;
+
+// Each row is an object with column headers as keys
+// { "Name": "John", "Email": "john@co.com", "Company": "Acme" }
+
+const contacts = await canvas.contacts.enrich({
+  people: rows.map(row => ({
+    name: row.Name,
+    email: row.Email,
+  })),
+});
+
+return contacts;
+```
+
+### Supported Formats
+
+- CSV (`.csv`)
+- Excel (`.xlsx`, `.xls`)
+
+---
+
+## Manual
+
+Run on-demand by clicking "Run" in the UI.
+
+```typescript
+// input: Empty array or test data you provide
+const companies = await canvas.companies.find({
+  industries: ["Fintech"],
+  limit: 10,
+});
+
+return companies;
+```
+
+Good for testing and one-off runs.
+

@@ -1,0 +1,97 @@
+---
+title: "Find People"
+description: "Search for decision makers at companies"
+icon: "users"
+---
+
+Find people at companies based on their role, title, or department. Use this to identify decision makers for outreach.
+
+```typescript
+const people = await canvas.people.search({
+  companies,
+  titles: ["CTO", "VP Engineering"],
+  maxPerCompany: 3,
+});
+```
+
+---
+
+## Parameters
+
+<ParamField body="companies" type="Company[]" required>
+  Companies to search within. Usually the output of `canvas.companies.find()`.
+</ParamField>
+
+<ParamField body="titles" type="string[]">
+  Job titles to search for (e.g., `["CTO", "VP Engineering"]`).
+</ParamField>
+
+<ParamField body="seniorities" type="string[]">
+  Seniority levels (e.g., `["c_suite", "vp", "director"]`).
+</ParamField>
+
+<ParamField body="departments" type="string[]">
+  Departments to search in (e.g., `["engineering", "sales", "marketing"]`).
+</ParamField>
+
+<ParamField body="maxPerCompany" type="number" default="5">
+  Maximum number of people to find per company.
+</ParamField>
+
+<ParamField body="_providers" type="string[]">
+  Advanced: Override the provider waterfall order.
+  Options: `apollo`, `pdl`, `sonar_pro`, `sonar_deep_research`, `gpt_5`, `gemini`, `o4_mini_deep_research`
+</ParamField>
+
+---
+
+## Returns
+
+Array of people matching the criteria. Each person includes:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Full name |
+| `title` | string | Job title |
+| `company` | string | Company name |
+| `domain` | string | Company domain |
+| `linkedin_url` | string | LinkedIn profile URL (if available) |
+
+---
+
+## Examples
+
+### Find C-Suite Executives
+
+```typescript
+const executives = await canvas.people.search({
+  companies,
+  titles: ["CEO", "CFO", "CTO", "COO"],
+  maxPerCompany: 2,
+});
+```
+
+### Find Sales Leaders
+
+```typescript
+const salesLeaders = await canvas.people.search({
+  companies,
+  titles: ["VP Sales", "Head of Sales", "Sales Director"],
+  departments: ["sales"],
+  maxPerCompany: 1,
+});
+```
+
+### Find Engineering Leads
+
+```typescript
+const engineers = await canvas.people.search({
+  companies,
+  departments: ["engineering"],
+  seniorities: ["director", "vp", "c_suite"],
+  maxPerCompany: 3,
+});
+```
+
+
+

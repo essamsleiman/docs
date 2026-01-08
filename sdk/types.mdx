@@ -1,0 +1,525 @@
+---
+title: "Type Reference"
+description: "TypeScript type definitions for the Canvas SDK"
+icon: "brackets-curly"
+---
+
+Complete TypeScript type definitions for all SDK interfaces.
+
+---
+
+## Core Types
+
+### Company
+
+```typescript
+interface Company {
+  id: string;
+  name: string;
+}
+```
+
+### CompanyWithDetails
+
+```typescript
+interface CompanyWithDetails {
+  name: string;
+  website?: string;
+  domain?: string;
+  industry?: string;
+  employee_count?: number;
+  revenue?: number;
+  linkedin_url?: string;
+  founded_year?: number;
+  location?: string;
+  description?: string;
+}
+```
+
+### Place
+
+```typescript
+interface Place {
+  name: string;
+  address: string;
+  phone?: string;
+  website?: string;
+  rating?: number;
+  reviewCount?: number;
+  placeId: string;
+  types?: string[];
+  hours?: {
+    monday?: string;
+    tuesday?: string;
+    wednesday?: string;
+    thursday?: string;
+    friday?: string;
+    saturday?: string;
+    sunday?: string;
+  };
+  priceLevel?: number;
+}
+```
+
+### Person
+
+```typescript
+interface Person {
+  name: string;
+  title: string;
+  company: string;
+  domain?: string;
+  email?: string;
+  linkedin_url?: string;
+  phone?: string;
+}
+```
+
+### ValidationResult
+
+```typescript
+interface ValidationResult {
+  value: string;
+  valid: boolean;
+  status: string;
+  reason?: string;
+}
+```
+
+---
+
+## Provider Types
+
+### CompanyDiscoveryProvider
+
+```typescript
+type CompanyDiscoveryProvider =
+  | "apollo"
+  | "exa"
+  | "linkedin";
+```
+
+
+### PeopleSearchProvider
+
+```typescript
+type PeopleSearchProvider =
+  | "apollo"
+  | "sonar_pro"
+  | "sonar_deep_research"
+  | "gpt-5"
+  | "gpt_4o"
+  | "gemini"
+  | "o4_mini_deep_research"
+  | "pdl";
+```
+
+### ContactEnrichmentProvider
+
+```typescript
+type ContactEnrichmentProvider =
+  | "apollo"
+  | "leadmagic"
+  | "findymail"
+  | "prospeo"
+  | "datagma"
+  | "crustdata"
+  | "exa"
+  | "pdl"
+  | "lusha"
+  | "sonar_pro"
+  | "sonar_deep_research"
+  | "gemini"
+  | "openai_deep_research"
+  | "openai_gpt4o";
+```
+
+### ResearchModel
+
+```typescript
+type ResearchModel =
+  | "gpt-5-nano"
+  | "o4-mini-deep-research"
+  | "sonar-deep-research"
+  | "sonar-pro"
+  | "sonar-mini"
+  | "gemini-2.5-pro";
+```
+
+---
+
+## Parameter Types
+
+### CompanyFindParams
+
+```typescript
+interface CompanyFindParams {
+  // What kind of companies?
+  industries?: string[];
+  keywords?: string[];
+  technologies?: string[];
+
+  // Where?
+  countries?: string[];
+  states?: string[];
+  cities?: string[];
+  location?: string;
+
+  // How big?
+  employeeCountMin?: number;
+  employeeCountMax?: number;
+  revenueMin?: number;
+  revenueMax?: number;
+
+  // How many?
+  limit?: number;
+
+  // Advanced: Override provider selection
+  _provider?: CompanyDiscoveryProvider;
+}
+```
+
+### PlaceFindParams
+
+```typescript
+interface PlaceFindParams {
+  // What are you looking for?
+  query: string;
+  keywords?: string[];
+
+  // Where?
+  location?: string;
+  coordinates?: { lat: number; lng: number };
+  radius?: number; // meters, default 5000
+
+  // Filters
+  minRating?: number;
+  minReviews?: number;
+  hasWebsite?: boolean;
+  openNow?: boolean;
+
+  // How many?
+  limit?: number;
+}
+```
+
+### PeopleSearchParams
+
+```typescript
+interface PeopleSearchParams {
+  companies: CompanyWithDetails[];
+  titles?: string[];
+  seniorities?: string[];
+  departments?: string[];
+  maxPerCompany?: number;
+  _providers?: PeopleSearchProvider[];
+}
+```
+
+### ContactEnrichParams
+
+```typescript
+interface ContactEnrichParams {
+  people: Person[];
+  _emailProviders?: ContactEnrichmentProvider[];
+  _phoneProviders?: ContactEnrichmentProvider[];
+}
+```
+
+### EmailValidateParams
+
+```typescript
+interface EmailValidateParams {
+  emails: string[];
+}
+```
+
+### PhoneValidateParams
+
+```typescript
+interface PhoneValidateParams {
+  phones: string[];
+}
+```
+
+### AIResearchParams
+
+```typescript
+interface AIResearchParams {
+  prompt: string;
+  data: Record<string, unknown>;
+  model?: ResearchModel;
+  maxTokens?: number;
+}
+```
+
+---
+
+## Module Interfaces
+
+### CanvasSDK
+
+The main SDK interface:
+
+```typescript
+interface CanvasSDK {
+  // Core modules
+  companies: CompaniesModule;
+  places: PlacesModule;
+  people: PeopleModule;
+  contacts: ContactsModule;
+  ai: AIModule;
+  
+  // Social modules
+  linkedin: LinkedInModule;
+  instagram: InstagramModule;
+  
+  // Utilities
+  log: (...args: unknown[]) => void;
+  delay: (ms: number) => Promise<void>;
+}
+```
+
+### CompaniesModule
+
+```typescript
+interface CompaniesModule {
+  find: (params: CompanyFindParams) => Promise<CompanyWithDetails[]>;
+}
+```
+
+### PlacesModule
+
+```typescript
+interface PlacesModule {
+  find: (params: PlaceFindParams) => Promise<Place[]>;
+}
+```
+
+### PeopleModule
+
+```typescript
+interface PeopleModule {
+  search: (params: PeopleSearchParams) => Promise<Person[]>;
+}
+```
+
+### ContactsModule
+
+```typescript
+interface ContactsModule {
+  enrich: (params: ContactEnrichParams) => Promise<Person[]>;
+  email: ContactsEmailModule;
+  phone: ContactsPhoneModule;
+}
+
+interface ContactsEmailModule {
+  validate: (params: EmailValidateParams) => Promise<ValidationResult[]>;
+}
+
+interface ContactsPhoneModule {
+  validate: (params: PhoneValidateParams) => Promise<ValidationResult[]>;
+}
+```
+
+### AIModule
+
+```typescript
+interface AIModule {
+  research: (params: AIResearchParams) => Promise<string>;
+}
+```
+
+### LinkedInModule
+
+```typescript
+interface LinkedInModule {
+  profiles: (params: LinkedInProfilesParams) => Promise<LinkedInProfile[]>;
+  posts: (params: LinkedInPostsParams) => Promise<LinkedInPost[]>;
+  findUrls: (params: LinkedInFindUrlsParams) => Promise<PersonWithUrl[]>;
+  reactions: (params: LinkedInReactionsParams) => Promise<Reactor[]>;
+}
+```
+
+### InstagramModule
+
+```typescript
+interface InstagramModule {
+  profiles: (params: InstagramProfilesParams) => Promise<InstagramProfile[]>;
+}
+```
+
+---
+
+## LinkedIn Types
+
+### LinkedInProfilesParams
+
+```typescript
+interface LinkedInProfilesParams {
+  urls: string[];
+  fields?: LinkedInProfileField[];
+}
+```
+
+### LinkedInPostsParams
+
+```typescript
+interface LinkedInPostsParams {
+  urls: string[];
+  postsPerProfile?: number;
+  includeReposts?: boolean;
+  includeComments?: boolean;
+  fields?: LinkedInPostField[];
+}
+```
+
+### LinkedInFindUrlsParams
+
+```typescript
+interface LinkedInFindUrlsParams {
+  people: Array<{
+    firstName?: string;
+    lastName?: string;
+    fullName?: string;
+    company: string;
+  }>;
+}
+```
+
+### LinkedInReactionsParams
+
+```typescript
+interface LinkedInReactionsParams {
+  postUrls: string[];
+  maxPerPost?: number;
+}
+```
+
+### LinkedInProfile
+
+```typescript
+interface LinkedInProfile {
+  linkedinUrl: string;
+  firstName?: string;
+  lastName?: string;
+  fullName?: string;
+  headline?: string;
+  about?: string;
+  connections?: number;
+  followers?: number;
+  email?: string;
+  profilePic?: string;
+  jobTitle?: string;
+  companyName?: string;
+  companyIndustry?: string;
+  companyWebsite?: string;
+  companySize?: string;
+  jobDuration?: string;
+  jobDurationYears?: number;
+  country?: string;
+  addressFull?: string;
+  addressLocal?: string;
+  mobileNumber?: string;
+  topSkills?: string[];
+  totalSkills?: number;
+  recentExperience?: object;
+  totalExperience?: number;
+  education?: object[];
+}
+```
+
+### LinkedInPost
+
+```typescript
+interface LinkedInPost {
+  postText: string;
+  postLink: string;
+  postedAgo: string;
+  actorName: string;
+  actorDescription: string;
+  numLikes: number;
+  numComments: number;
+  numShares: number;
+  imageComponent?: string[];
+  videoComponent?: object;
+  linksInPost?: string[];
+  urn: string;
+  isRepost: boolean;
+  comments?: object[];
+}
+```
+
+### LinkedInProfileField
+
+```typescript
+type LinkedInProfileField =
+  | "firstName" | "lastName" | "fullName" | "headline" | "about"
+  | "connections" | "followers" | "email" | "profilePic"
+  | "jobTitle" | "companyName" | "companyIndustry" | "companyWebsite"
+  | "companySize" | "jobDuration" | "jobDurationYears"
+  | "country" | "addressFull" | "addressLocal" | "mobileNumber"
+  | "topSkills" | "totalSkills" | "recentExperience" | "totalExperience" | "education";
+```
+
+### LinkedInPostField
+
+```typescript
+type LinkedInPostField =
+  | "postText" | "postLink" | "postedAgo" | "actorName" | "actorDescription"
+  | "numLikes" | "numComments" | "numShares" | "imageComponent"
+  | "videoComponent" | "linksInPost" | "urn" | "isRepost" | "comments";
+```
+
+---
+
+## Instagram Types
+
+### InstagramProfilesParams
+
+```typescript
+interface InstagramProfilesParams {
+  handles: string[];
+  postsLimit?: number;
+  fields?: InstagramField[];
+}
+```
+
+### InstagramProfile
+
+```typescript
+interface InstagramProfile {
+  handle: string;
+  followers?: number;
+  following?: number;
+  postsCount?: number;
+  fullName?: string;
+  bio?: string;
+  verified?: boolean;
+  business?: boolean;
+  externalUrl?: string;
+  profileUrl?: string;
+  recentPostCaption?: string;
+  recentPostLikes?: number;
+  recentPostComments?: number;
+  recentPostDate?: string;
+  recentPostType?: string;
+  recentPostUrl?: string;
+  avgLikes?: number;
+  avgComments?: number;
+  engagementRate?: number;
+  totalScrapedPosts?: number;
+}
+```
+
+### InstagramField
+
+```typescript
+type InstagramField =
+  | "followers" | "following" | "postsCount" | "fullName" | "bio"
+  | "verified" | "business" | "externalUrl" | "profileUrl"
+  | "recentPostCaption" | "recentPostLikes" | "recentPostComments"
+  | "recentPostDate" | "recentPostType" | "recentPostUrl"
+  | "avgLikes" | "avgComments" | "engagementRate" | "totalScrapedPosts";
+```
+

@@ -1,15 +1,68 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "Canvas SDK",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#18181B",
+    "light": "#3F3F46",
+    "dark": "#09090B"
   },
   "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
+      {
+        "tab": "SDK",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "sdk/introduction",
+              "sdk/context",
+              "sdk/examples"
+            ]
+          },
+          {
+            "group": "Person",
+            "pages": [
+              "sdk/find-people",
+              "sdk/get-contact-info"
+            ]
+          },
+          {
+            "group": "Company",
+            "pages": [
+              "sdk/find-companies",
+              "sdk/find-places"
+            ]
+          },
+          {
+            "group": "Social Intelligence",
+            "pages": [
+              "sdk/linkedin",
+              "sdk/instagram"
+            ]
+          },
+          {
+            "group": "Enrichment",
+            "pages": [
+              "sdk/ai-research"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "sdk/integrations"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "sdk/utilities",
+              "sdk/types"
+            ]
+          }
+        ]
+      },
       {
         "tab": "Guides",
         "groups": [
@@ -48,7 +101,7 @@
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
             "group": "API documentation",

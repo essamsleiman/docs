@@ -1,0 +1,152 @@
+---
+title: "Find Companies"
+description: "Discover B2B companies by industry, size, and technology stack"
+icon: "building"
+---
+
+Discover B2B companies based on industry, size, technology stack, funding stage, and other firmographic criteria.
+
+<Note>
+  Looking for local businesses like restaurants or retail stores? Use [`canvas.places.find()`](/sdk/find-places) instead.
+</Note>
+
+```typescript
+const companies = await canvas.companies.find({
+  industries: ["Fintech", "SaaS"],
+  employeeCountMin: 50,
+  employeeCountMax: 500,
+  countries: ["United States"],
+  limit: 100,
+});
+```
+
+---
+
+## Parameters
+
+### What kind of companies?
+
+<ParamField body="industries" type="string[]">
+  Industries to search for (e.g., `["Fintech", "SaaS"]`).
+</ParamField>
+
+<ParamField body="keywords" type="string[]">
+  Keywords to match in company descriptions.
+</ParamField>
+
+<ParamField body="technologies" type="string[]">
+  Technologies the company uses (e.g., `["React", "AWS", "Snowflake"]`).
+</ParamField>
+
+### Where?
+
+<ParamField body="countries" type="string[]">
+  Countries to search in (e.g., `["United States", "Canada"]`).
+</ParamField>
+
+<ParamField body="states" type="string[]">
+  US states to search in (e.g., `["California", "New York"]`).
+</ParamField>
+
+<ParamField body="cities" type="string[]">
+  Cities to search in (e.g., `["San Francisco", "Austin"]`).
+</ParamField>
+
+### How big?
+
+<ParamField body="employeeCountMin" type="number">
+  Minimum employee count.
+</ParamField>
+
+<ParamField body="employeeCountMax" type="number">
+  Maximum employee count.
+</ParamField>
+
+<ParamField body="revenueMin" type="number">
+  Minimum annual revenue.
+</ParamField>
+
+<ParamField body="revenueMax" type="number">
+  Maximum annual revenue.
+</ParamField>
+
+### How many?
+
+<ParamField body="limit" type="number" default="100">
+  Maximum number of companies to return.
+</ParamField>
+
+### Advanced
+
+<ParamField body="_provider" type="string">
+  Override automatic provider selection.
+  Options: `apollo`, `exa`, `linkedin`
+</ParamField>
+
+---
+
+## Returns
+
+Array of companies matching the criteria:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Company name |
+| `website` | string | Company website |
+| `domain` | string | Company domain |
+| `industry` | string | Industry category |
+| `employee_count` | number | Employee count |
+| `revenue` | number | Estimated revenue |
+| `linkedin_url` | string | LinkedIn company page |
+| `founded_year` | number | Year founded |
+| `location` | string | Headquarters location |
+| `description` | string | Company description |
+
+---
+
+## Examples
+
+### Find Startups
+
+```typescript
+const startups = await canvas.companies.find({
+  industries: ["SaaS", "AI/ML"],
+  employeeCountMin: 10,
+  employeeCountMax: 50,
+  limit: 100,
+});
+```
+
+### Find Enterprise Companies
+
+```typescript
+const enterprise = await canvas.companies.find({
+  industries: ["Software"],
+  employeeCountMin: 1000,
+  revenueMin: 100000000,
+  countries: ["United States"],
+});
+```
+
+### Find by Technology Stack
+
+```typescript
+const reactCompanies = await canvas.companies.find({
+  technologies: ["React", "TypeScript", "AWS"],
+  employeeCountMin: 20,
+  limit: 100,
+});
+```
+
+### Find Competitors
+
+```typescript
+const competitors = await canvas.companies.find({
+  industries: ["Marketing Automation"],
+  employeeCountMin: 50,
+  employeeCountMax: 500,
+  keywords: ["email marketing", "customer engagement"],
+});
+```
+
+

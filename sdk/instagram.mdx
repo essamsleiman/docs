@@ -1,0 +1,82 @@
+---
+title: "Instagram"
+description: "Scrape Instagram profiles and engagement metrics"
+icon: "instagram"
+---
+
+Scrape Instagram profile data and engagement metrics for influencer research and brand monitoring.
+
+---
+
+## canvas.instagram.profiles()
+
+Get follower counts, engagement rates, and recent post data from Instagram profiles.
+
+```typescript
+const profiles = await canvas.instagram.profiles({
+  handles: ["nike", "adidas", "underarmour"],
+  postsLimit: 10,
+  fields: ["followers", "engagementRate", "avgLikes", "bio"],
+});
+
+// Find high engagement accounts
+const highEngagement = profiles.filter(p => p.engagementRate > 3);
+```
+
+### Parameters
+
+<ParamField body="handles" type="string[]" required>
+  Instagram usernames (without @) to scrape.
+</ParamField>
+
+<ParamField body="postsLimit" type="number" default="20">
+  Recent posts to analyze for engagement metrics (max 200).
+</ParamField>
+
+<ParamField body="fields" type="string[]">
+  Fields to return. Defaults to all. Options: `followers`, `following`, `postsCount`, `fullName`, `bio`, `verified`, `business`, `externalUrl`, `profileUrl`, `recentPostCaption`, `recentPostLikes`, `recentPostComments`, `recentPostDate`, `recentPostType`, `recentPostUrl`, `avgLikes`, `avgComments`, `engagementRate`, `totalScrapedPosts`
+</ParamField>
+
+### Returns
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `handle` | string | Instagram username |
+| `followers` | number | Follower count |
+| `following` | number | Following count |
+| `bio` | string | Biography text |
+| `verified` | boolean | Verified badge |
+| `engagementRate` | number | Engagement rate % |
+| `avgLikes` | number | Average likes per post |
+| `avgComments` | number | Average comments per post |
+| `recentPostCaption` | string | Latest post caption |
+| `recentPostLikes` | number | Latest post likes |
+
+---
+
+## Example: Influencer Research
+
+Score and rank potential influencer partners:
+
+```typescript
+const profiles = await canvas.instagram.profiles({
+  handles: ["influencer1", "influencer2", "influencer3"],
+  postsLimit: 20,
+});
+
+// Score by engagement and reach
+for (const profile of profiles) {
+  let score = 0;
+  if (profile.engagementRate > 5) score += 40;
+  else if (profile.engagementRate > 3) score += 25;
+  
+  if (profile.followers > 100000) score += 30;
+  else if (profile.followers > 10000) score += 20;
+  
+  if (profile.verified) score += 15;
+  
+  profile.score = score;
+}
+
+return profiles.sort((a, b) => b.score - a.score);
+```

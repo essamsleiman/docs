@@ -1,0 +1,150 @@
+---
+title: "AI Agent"
+description: "AI-powered research and content generation"
+icon: "robot"
+---
+
+Use AI models to research companies, extract insights, and generate personalized content.
+
+```typescript
+const summary = await canvas.ai.research({
+  prompt: "Summarize this company in one sentence",
+  data: company,
+});
+```
+
+---
+
+## Parameters
+
+<ParamField body="prompt" type="string" required>
+  Instructions for what you want the AI to research or generate.
+</ParamField>
+
+<ParamField body="data" type="Record<string, unknown>" required>
+  Context data for the AI to analyze.
+</ParamField>
+
+<ParamField body="model" type="string" default="sonar-pro">
+  AI model to use:
+  - `sonar-pro` - Web search (default)
+  - `sonar-deep-research` - Thorough research
+  - `gemini-2.5-pro` - Google search
+  - `gpt-4o` - Fast, no search
+  - `o4-mini-deep-research` - Deep research
+</ParamField>
+
+<ParamField body="resultType" type="string" default="Text">
+  Output format: `Text`, `Number`, `Option`, `StructuredOutput`
+</ParamField>
+
+<ParamField body="resultOptions" type="string[]">
+  For `Option` type: valid choices to pick from.
+</ParamField>
+
+<ParamField body="resultSchema" type="object">
+  For `StructuredOutput` type: define fields with types.
+</ParamField>
+
+---
+
+## Result Types
+
+### Text
+
+Free-form response. Use for summaries, research, content.
+
+```typescript
+const signals = await canvas.ai.research({
+  prompt: "Find recent news: funding, hiring, or product launches",
+  data: { name: "Stripe", website: "stripe.com" },
+  model: "sonar-deep-research",
+});
+// "Stripe announced $6.5B funding in March 2023..."
+```
+
+### Number
+
+Numeric value. Use for scoring, estimating, counting.
+
+```typescript
+const score = await canvas.ai.research({
+  prompt: `Score 1-100 for fit with our ICP:
+    - B2B SaaS company
+    - 50-500 employees  
+    - Has a sales team`,
+  data: company,
+  resultType: "Number",
+});
+// 85
+```
+
+### Option
+
+Pick from predefined choices. Use for categorization, qualification.
+
+```typescript
+const tier = await canvas.ai.research({
+  prompt: `Qualify this lead:
+    HOT = Decision maker, clear need
+    WARM = Right profile, unclear intent
+    COLD = Poor fit`,
+  data: lead,
+  resultType: "Option",
+  resultOptions: ["HOT", "WARM", "COLD"],
+});
+// "HOT"
+```
+
+### StructuredOutput
+
+Extract multiple typed fields. Use for complex analysis.
+
+```typescript
+const analysis = await canvas.ai.research({
+  prompt: "Analyze for sales outreach",
+  data: lead,
+  resultType: "StructuredOutput",
+  resultSchema: {
+    fields: [
+      { name: "qualified", type: "boolean" },
+      { name: "score", type: "number" },
+      { name: "pain_points", type: "string" },
+      { name: "opener", type: "string" },
+    ],
+  },
+});
+// { qualified: true, score: 85, pain_points: "Manual lead routing", opener: "Saw you just expanded to 15 reps..." }
+```
+
+---
+
+## Full Example
+
+Combine result types in a workflow:
+
+```typescript
+// 1. Score leads
+const score = await canvas.ai.research({
+  prompt: "Score 1-100 based on company size, industry fit, and title seniority",
+  data: lead,
+  resultType: "Number",
+});
+
+// 2. Qualify high scorers
+if (score >= 70) {
+  const analysis = await canvas.ai.research({
+    prompt: "Generate personalized outreach",
+    data: lead,
+    model: "sonar-pro",
+    resultType: "StructuredOutput",
+    resultSchema: {
+      fields: [
+        { name: "subject", type: "string" },
+        { name: "opener", type: "string" },
+        { name: "cta", type: "string" },
+      ],
+    },
+  });
+}
+```

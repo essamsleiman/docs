@@ -1,0 +1,115 @@
+---
+title: "Utilities"
+description: "Helper functions for logging and flow control"
+icon: "toolbox"
+---
+
+The SDK provides utility functions for logging output and controlling execution flow.
+
+## Methods
+
+| Method | Description |
+|--------|-------------|
+| `canvas.log(...args)` | Log output (captured in execution results) |
+| `canvas.delay(ms)` | Wait for specified milliseconds |
+
+---
+
+## canvas.log()
+
+Log messages that are captured and returned in the execution results. Use this instead of `console.log()` to see output in the workflow UI.
+
+### Parameters
+
+<ParamField body="args" type="...unknown[]" required>
+  Any values to log. Objects are automatically stringified.
+</ParamField>
+
+### Example
+
+```typescript
+canvas.log("Starting workflow...");
+canvas.log("Found", companies.length, "companies");
+canvas.log({ step: "complete", count: 42 });
+```
+
+<Tip>
+Use `canvas.log()` liberally during development to debug your workflows. All logs are captured and displayed in the execution results.
+</Tip>
+
+---
+
+## canvas.delay()
+
+Pause execution for a specified time. Useful for rate limiting or waiting between API calls.
+
+### Parameters
+
+<ParamField body="ms" type="number" required>
+  Milliseconds to wait. Maximum is 10,000 (10 seconds).
+</ParamField>
+
+### Example
+
+```typescript
+// Wait 2 seconds between API calls
+for (const company of companies) {
+  const result = await canvas.ai.research({
+    prompt: "Summarize this company",
+    data: company
+  });
+  
+  await canvas.delay(2000); // Wait 2 seconds
+}
+```
+
+<Warning>
+The maximum delay is 10 seconds. Longer delays will be capped to prevent runaway executions.
+</Warning>
+
+---
+
+## Debugging Tips
+
+### Log Progress
+
+```typescript
+const companies = await canvas.companies.find({
+  industries: ["Fintech"],
+  limit: 50,
+});
+canvas.log(`✓ Found ${companies.length} companies`);
+
+const people = await canvas.people.search({
+  companies,
+  titles: ["CTO"],
+});
+canvas.log(`✓ Found ${people.length} people`);
+
+const contacts = await canvas.contacts.enrich({ people });
+canvas.log(`✓ Enriched ${contacts.length} contacts`);
+
+return contacts;
+```
+
+### Log Data Samples
+
+```typescript
+// Log first item to inspect structure
+canvas.log("Sample company:", companies[0]);
+
+// Log specific fields
+canvas.log("Industries found:", companies.map(c => c.industry).filter(Boolean));
+```
+
+### Track Timing
+
+```typescript
+const startTime = Date.now();
+
+// ... do work ...
+
+const elapsed = Date.now() - startTime;
+canvas.log(`Completed in ${elapsed}ms`);
+```
+

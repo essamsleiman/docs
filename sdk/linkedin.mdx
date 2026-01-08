@@ -1,0 +1,185 @@
+---
+title: "LinkedIn"
+description: "Scrape LinkedIn profiles, posts, and reactions"
+icon: "linkedin"
+---
+
+Access LinkedIn profile data, posts, and engagement signals for social selling and research.
+
+| Method | Description |
+|--------|-------------|
+| `canvas.linkedin.profiles()` | Scrape profile data from LinkedIn URLs |
+| `canvas.linkedin.posts()` | Get recent posts from profiles |
+| `canvas.linkedin.findUrls()` | Find LinkedIn URLs by name + company |
+| `canvas.linkedin.reactions()` | Get people who reacted to posts |
+
+---
+
+## canvas.linkedin.profiles()
+
+Scrape detailed profile information from LinkedIn profile URLs.
+
+```typescript
+const profiles = await canvas.linkedin.profiles({
+  urls: ["https://linkedin.com/in/johndoe"],
+  fields: ["headline", "jobTitle", "companyName", "topSkills"],
+});
+```
+
+### Parameters
+
+<ParamField body="urls" type="string[]" required>
+  LinkedIn profile URLs to scrape.
+</ParamField>
+
+<ParamField body="fields" type="string[]">
+  Fields to return. Defaults to all. Options: `firstName`, `lastName`, `fullName`, `headline`, `about`, `connections`, `followers`, `email`, `profilePic`, `jobTitle`, `companyName`, `companyIndustry`, `companyWebsite`, `companySize`, `jobDuration`, `jobDurationYears`, `country`, `addressFull`, `addressLocal`, `mobileNumber`, `topSkills`, `totalSkills`, `recentExperience`, `totalExperience`, `education`
+</ParamField>
+
+### Returns
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `fullName` | string | Full name |
+| `headline` | string | Profile headline |
+| `jobTitle` | string | Current job title |
+| `companyName` | string | Current company |
+| `about` | string | About section |
+| `topSkills` | string[] | Top skills |
+| `email` | string | Email (if public) |
+| `mobileNumber` | string | Phone (if public) |
+
+---
+
+## canvas.linkedin.posts()
+
+Get recent posts from LinkedIn profiles.
+
+```typescript
+const posts = await canvas.linkedin.posts({
+  urls: profiles.map(p => p.linkedinUrl),
+  postsPerProfile: 5,
+  includeComments: true,
+});
+```
+
+### Parameters
+
+<ParamField body="urls" type="string[]" required>
+  LinkedIn profile URLs to get posts from.
+</ParamField>
+
+<ParamField body="postsPerProfile" type="number" default="20">
+  Posts to fetch per profile (max 100).
+</ParamField>
+
+<ParamField body="includeReposts" type="boolean" default="false">
+  Include reposts/shares.
+</ParamField>
+
+<ParamField body="includeComments" type="boolean" default="false">
+  Include top 10 comments per post.
+</ParamField>
+
+### Returns
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `postText` | string | Post content |
+| `postLink` | string | Direct link to post |
+| `postedAgo` | string | When posted |
+| `numLikes` | number | Like count |
+| `numComments` | number | Comment count |
+| `numShares` | number | Share count |
+| `isRepost` | boolean | Whether it's a repost |
+
+---
+
+## canvas.linkedin.findUrls()
+
+Find LinkedIn profile URLs for people by name and company.
+
+```typescript
+const withUrls = await canvas.linkedin.findUrls({
+  people: contacts.map(c => ({
+    firstName: c.first_name,
+    lastName: c.last_name,
+    company: c.company,
+  })),
+});
+```
+
+### Parameters
+
+<ParamField body="people" type="object[]" required>
+  People to find URLs for. Each needs `firstName` + `lastName` (or `fullName`) and `company`.
+</ParamField>
+
+### Returns
+
+Original person data plus `linkedinUrl` field.
+
+---
+
+## canvas.linkedin.reactions()
+
+Get people who reacted to LinkedIn posts. Great for finding engaged prospects.
+
+```typescript
+const reactors = await canvas.linkedin.reactions({
+  postUrls: ["https://linkedin.com/posts/competitor_announcement-123456"],
+  maxPerPost: 100,
+});
+
+// Enrich these engaged prospects
+const contacts = await canvas.contacts.enrich({ people: reactors });
+```
+
+### Parameters
+
+<ParamField body="postUrls" type="string[]" required>
+  LinkedIn post URLs to get reactions from.
+</ParamField>
+
+<ParamField body="maxPerPost" type="number" default="50">
+  Max reactions per post (max 500).
+</ParamField>
+
+### Returns
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `linkedinUrl` | string | Profile URL |
+| `name` | string | Person's name |
+| `headline` | string | Profile headline |
+| `reactionType` | string | Type of reaction |
+
+---
+
+## Example: Content-Based Lead Gen
+
+Find prospects who engage with competitor or industry content:
+
+```typescript
+// Get posts from industry influencers
+const posts = await canvas.linkedin.posts({
+  urls: ["https://linkedin.com/in/industry-leader"],
+  postsPerProfile: 10,
+});
+
+// Get reactors from top posts
+const topPosts = posts.filter(p => p.numLikes > 100).slice(0, 3);
+
+const allReactors = [];
+for (const post of topPosts) {
+  const reactors = await canvas.linkedin.reactions({
+    postUrls: [post.postLink],
+    maxPerPost: 50,
+  });
+  allReactors.push(...reactors);
+}
+
+// Dedupe and return
+const unique = [...new Map(allReactors.map(r => [r.linkedinUrl, r])).values()];
+return unique;
+```

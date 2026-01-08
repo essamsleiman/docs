@@ -1,0 +1,204 @@
+---
+title: "Actions"
+description: "Send data to external systems"
+icon: "paper-plane"
+---
+
+Actions send your processed data to external systems — CRMs, Slack, email tools, and more.
+
+## Slack
+
+Send notifications and messages to Slack channels.
+
+```typescript
+// Send a simple message
+await canvas.slack.send({
+  channel: "#sales-alerts",
+  message: `New lead: ${contact.name} from ${contact.company}`,
+});
+
+// Send a rich message with details
+await canvas.slack.send({
+  channel: "#sales-alerts",
+  message: `🔥 *Hot Lead Alert*`,
+  blocks: [
+    {
+      type: "section",
+      text: `*${contact.name}* - ${contact.title}\n${contact.company} (${contact.company_size} employees)`,
+    },
+    {
+      type: "section", 
+      fields: [
+        { label: "Email", value: contact.email },
+        { label: "Score", value: contact.score },
+      ],
+    },
+  ],
+});
+```
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `channel` | string | Channel name (e.g., `#sales`) or ID |
+| `message` | string | Message text (supports markdown) |
+| `blocks` | array | Optional rich formatting blocks |
+
+---
+
+## Hubspot
+
+Create and update contacts in Hubspot CRM.
+
+```typescript
+// Create a new contact
+await canvas.hubspot.createContact({
+  email: contact.email,
+  firstname: contact.first_name,
+  lastname: contact.last_name,
+  company: contact.company,
+  jobtitle: contact.title,
+  phone: contact.phone,
+  // Custom properties
+  lead_score: contact.score,
+  lead_source: "canvas",
+});
+
+// Update existing contact
+await canvas.hubspot.updateContact({
+  email: contact.email, // Lookup key
+  properties: {
+    lead_score: contact.score,
+    last_enriched: new Date().toISOString(),
+  },
+});
+
+// Create or update (upsert)
+await canvas.hubspot.upsertContact({
+  email: contact.email,
+  properties: { ... },
+});
+```
+
+### Supported Objects
+
+| Method | Description |
+|--------|-------------|
+| `createContact()` | Create new contact |
+| `updateContact()` | Update existing contact |
+| `upsertContact()` | Create or update |
+| `createCompany()` | Create new company |
+| `createDeal()` | Create new deal |
+
+---
+
+## Salesforce
+
+Push leads and contacts to Salesforce.
+
+```typescript
+// Create a lead
+await canvas.salesforce.createLead({
+  FirstName: contact.first_name,
+  LastName: contact.last_name,
+  Email: contact.email,
+  Company: contact.company,
+  Title: contact.title,
+  LeadSource: "Canvas",
+});
+
+// Create a contact (requires AccountId)
+await canvas.salesforce.createContact({
+  FirstName: contact.first_name,
+  LastName: contact.last_name,
+  Email: contact.email,
+  AccountId: contact.salesforce_account_id,
+});
+```
+
+---
+
+## Instantly
+
+Add contacts to email sequences.
+
+```typescript
+// Add to a campaign/sequence
+await canvas.instantly.addToCampaign({
+  campaign: "outbound-q1",  // Campaign name or ID
+  contacts: contacts.map(c => ({
+    email: c.email,
+    first_name: c.first_name,
+    last_name: c.last_name,
+    company: c.company,
+    // Personalization variables
+    ice_breaker: c.ice_breaker,
+    value_prop: c.value_prop,
+  })),
+});
+```
+
+### Parameters
+
+| Param | Type | Description |
+|-------|------|-------------|
+| `campaign` | string | Campaign name or ID |
+| `contacts` | array | Contacts with personalization fields |
+
+---
+
+## Audiences
+
+Save leads to Canvas audiences for later use.
+
+```typescript
+// Add to an existing audience
+await canvas.audiences.add({
+  audience: "Q1 Fintech Leads",
+  records: contacts,
+});
+
+// Create a new audience and add records
+await canvas.audiences.create({
+  name: "Hot Leads - January",
+  records: contacts.filter(c => c.score > 80),
+});
+
+// Export audience to CSV
+const csv = await canvas.audiences.export({
+  audience: "Q1 Fintech Leads",
+  format: "csv",
+});
+```
+
+---
+
+## Example: Full Routing Logic
+
+```typescript
+// Process leads and route based on qualification
+for (const contact of input) {
+  if (contact.qualified && contact.score >= 80) {
+    // Hot lead → Slack + CRM + AE sequence
+    await canvas.slack.send({
+      channel: "#hot-leads",
+      message: `🔥 ${contact.name} (${contact.company}) - Score: ${contact.score}`,
+    });
+    await canvas.hubspot.createContact({ ...contact, lifecycle_stage: "sql" });
+    await canvas.instantly.addToCampaign({ campaign: "ae-outbound", contacts: [contact] });
+    
+  } else if (contact.qualified) {
+    // Warm lead → CRM + nurture sequence
+    await canvas.hubspot.createContact({ ...contact, lifecycle_stage: "mql" });
+    await canvas.instantly.addToCampaign({ campaign: "nurture", contacts: [contact] });
+    
+  } else {
+    // Not qualified → save for later
+    await canvas.audiences.add({ audience: "Not Qualified", records: [contact] });
+  }
+}
+
+return input;
+```
+

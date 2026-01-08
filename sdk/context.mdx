@@ -1,0 +1,84 @@
+---
+title: "Context"
+description: "How data flows through Canvas workflows"
+icon: "arrows-rotate"
+---
+
+Every code block receives `input` (array from previous step) and must `return` an array (for the next step).
+
+## The Basics
+
+```typescript
+// input: records from previous step
+// return: records for next step
+
+return input.map(record => ({
+  ...record,
+  processed: true,
+}));
+```
+
+## input
+
+| Scenario | What's in `input` |
+|----------|-------------------|
+| First step | `[]` or trigger data |
+| After company discovery | Company objects |
+| After people search | Person objects |
+| After contact enrichment | Contact objects with emails/phones |
+
+## return
+
+| Pattern | Code |
+|---------|------|
+| Transform | `return input.map(r => ({ ...r, new_field: "value" }))` |
+| Filter | `return input.filter(r => r.employee_count > 50)` |
+| New data | `return await canvas.companies.find({...})` |
+| Passthrough | `return input` |
+
+**Rules:**
+- Must return an array
+- `return []` stops the flow
+- No return = passthrough
+
+## Common Patterns
+
+### Add fields to each record
+
+```typescript
+return input.map(record => ({
+  ...record,
+  tier: record.employee_count > 500 ? "Enterprise" : "SMB",
+}));
+```
+
+### Enrich with AI
+
+```typescript
+for (const record of input) {
+  record.summary = await canvas.ai.research({
+    prompt: "Summarize this company",
+    data: record,
+  });
+}
+return input;
+```
+
+### Filter + transform
+
+```typescript
+return input
+  .filter(r => r.industry === "SaaS")
+  .map(r => ({ ...r, priority: "high" }));
+```
+
+## Execution Environment
+
+<Warning>
+**Not allowed:** `fetch()`, `require()`, `import`, `eval()`, file system, env vars
+</Warning>
+
+<Info>
+**Available:** All `canvas.*` methods, `async/await`, ES2020+ JavaScript, 30s timeout
+</Info>
+

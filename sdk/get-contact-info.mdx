@@ -1,0 +1,118 @@
+---
+title: "Get Contact Info"
+description: "Enrich people with verified email addresses and phone numbers"
+icon: "address-book"
+---
+
+Get verified email addresses and phone numbers for people.
+
+```typescript
+const contacts = await canvas.contacts.enrich({
+  people,
+});
+
+// Each person now has email
+contacts.forEach(c => canvas.log(`${c.name}: ${c.email}`));
+```
+
+---
+
+## Parameters
+
+<ParamField body="people" type="Person[]" required>
+  People to enrich. Usually the output of `canvas.people.search()`.
+</ParamField>
+
+<ParamField body="email" type="boolean" default="true">
+  Include email enrichment.
+</ParamField>
+
+<ParamField body="phone" type="boolean" default="false">
+  Include phone enrichment. Set to `true` to also get phone numbers.
+</ParamField>
+
+---
+
+## Returns
+
+The same people array with additional contact fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `email` | string | Verified email address |
+| `phone` | string | Phone number (if available) |
+
+---
+
+## Examples
+
+### Email only (default)
+
+```typescript
+const contacts = await canvas.contacts.enrich({
+  people,
+});
+// Returns people with email addresses
+```
+
+### Email + Phone
+
+```typescript
+const contacts = await canvas.contacts.enrich({
+  people,
+  phone: true,
+});
+// Returns people with both email and phone
+```
+
+### Phone only
+
+```typescript
+const contacts = await canvas.contacts.enrich({
+  people,
+  email: false,
+  phone: true,
+});
+// Returns people with phone numbers only
+```
+
+---
+
+## Validate Emails
+
+Verify that email addresses are deliverable before sending outreach.
+
+```typescript
+const results = await canvas.contacts.email.validate({
+  emails: contacts.map(c => c.email).filter(Boolean),
+});
+
+// Filter to only valid emails
+const validContacts = contacts.filter(c => {
+  const result = results.find(r => r.value === c.email);
+  return result?.valid;
+});
+```
+
+### Validation Result
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `value` | string | The email address |
+| `valid` | boolean | Whether email is deliverable |
+| `status` | string | Validation status |
+| `reason` | string | Reason for invalid status |
+
+---
+
+## Validate Phones
+
+Verify phone numbers before calling.
+
+```typescript
+const results = await canvas.contacts.phone.validate({
+  phones: contacts.map(c => c.phone).filter(Boolean),
+});
+```
+
+

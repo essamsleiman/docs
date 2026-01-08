@@ -1,97 +1,99 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Welcome to Canvas"
+description: "The first AI GTM Engineer. Build any workflow with our TypeScript SDK."
 ---
 
-## Setting up
-
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={3}>
+  <Card title="Describe" icon="message">
+    Tell the agent what to build
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Generate" icon="wand-magic-sparkles">
+    AI writes code using the Canvas SDK
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Run" icon="play">
+    Execute and iterate in seconds
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
-
-Everything you need to create world-class documentation.
-
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
+<CardGroup cols={2}>
+  <Card title="Getting Started" icon="rocket" href="/sdk/introduction">
+    SDK Basics
   </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
+  <Card title="Cookbook" icon="book-open" href="/sdk/examples">
+    Real-world workflow examples you can leverage and adapt.
   </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+</CardGroup>
 
-## Need inspiration?
+## What is Canvas?
 
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+Canvas is two things:
+
+**1. A GTM AI agent**: Describe what you want to build in plain English.
+Canvas writes production-ready Typescript code and executes it.
+
+**2. A GTM SDK**: Company data, People Data, Contact info, LinkedIn, GTM research:
+all behind one import. One API. Type-safe TypeScript.
+
+Think Claude Code, but tools purpose-built for GTM.
+
+## Quick Example
+
+```typescript
+// Find fintech companies and their CTOs
+
+const companies = await canvas.companies.find({
+  industries: ["Fintech"],
+  employeeCountMin: 50,
+  employeeCountMax: 500,
+  limit: 100,
+});
+
+const people = await canvas.people.search({
+  companies,
+  titles: ["CTO", "VP Engineering"],
+  maxPerCompany: 2,
+});
+
+const contacts = await canvas.contacts.enrich({
+  people,
+});
+
+return contacts;
+```
+
+**Example Output:**
+
+| Name           | Company | Title          | Email             | Phone             |
+| -------------- | ------- | -------------- | ----------------- | ----------------- |
+| Sarah Chen     | Plaid   | CTO            | sarah@plaid.com   | +1 (415) 555-0123 |
+| Marcus Johnson | Stripe  | VP Engineering | marcus@stripe.com | +1 (415) 555-0456 |
+| Priya Patel    | Brex    | CTO            | priya@brex.com    | +1 (628) 555-0789 |
+
+## Capabilities
+
+<AccordionGroup>
+  <Accordion title="Companies" icon="building">
+    - `canvas.companies.find()` — B2B companies by industry, size, tech stack
+  </Accordion>
+  <Accordion title="Places" icon="location-dot">
+    - `canvas.places.find()` — Local businesses via Google Maps (restaurants, stores, services)
+  </Accordion>
+  <Accordion title="People & Contacts" icon="users">
+    - `canvas.people.search()` — Find decision makers by title
+    - `canvas.contacts.enrich()` — Emails, phones, waterfall enrichment
+    - `canvas.contacts.email.validate()` — Verify email deliverability
+    - `canvas.contacts.phone.validate()` — Verify phone numbers
+  </Accordion>
+  <Accordion title="LinkedIn" icon="linkedin">
+    - `canvas.linkedin.profiles()` — Scrape full profiles
+    - `canvas.linkedin.posts()` — Recent activity
+    - `canvas.linkedin.findUrls()` — Find LinkedIn URL by name
+    - `canvas.linkedin.reactions()` — Find engaged prospects
+  </Accordion>
+  <Accordion title="Instagram" icon="instagram">
+    - `canvas.instagram.profiles()` — Profile data, followers, engagement
+  </Accordion>
+  <Accordion title="Enrichment" icon="brain">
+    - `canvas.ai.research()` — Summarize, analyze, generate with AI
+  </Accordion>
+</AccordionGroup>
